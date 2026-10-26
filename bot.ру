@@ -1,23 +1,30 @@
 import os
+import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-ADMIN_ID = 6152430500
-TOKEN = os.environ.get("BOT_TOKEN")
+logging.basicConfig(level=logging.INFO)
+TOKEN = os.getenv("BOT_TOKEN") or os.getenv("TOKEN")
+
+if not TOKEN:
+    raise ValueError("BOT_TOKEN topilmadi!")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    if user.id != ADMIN_ID:
-        await context.bot.send_message(chat_id=ADMIN_ID, text=f"Yangi: @{user.username} | {user.first_name}")
-    await update.message.reply_text("Assalomu alaykum! Bu ODILKHANning YORDAMCHISI, sizga qanday yordam bera olaman?")
+    await update.message.reply_text("Salom! Khan bot ishlayapti! 🚀")
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id == ADMIN_ID:
-        return
-    await context.bot.forward_message(chat_id=ADMIN_ID, from_chat_id=update.effective_chat.id, message_id=update.message.message_id)
-    await update.message.reply_text("Rahmat! Xabaringizni oldim, tez orada javob beraman 🙏")
+async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Yordam: Menga xabar yoz!")
 
-app = Application.builder().token(TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_message))
-app.run_polling()
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"Qabul qildim: {update.message.text}")
+
+def main():
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    print("Bot ishga tushdi...")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
